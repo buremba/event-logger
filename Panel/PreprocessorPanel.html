@@ -1,0 +1,49 @@
+<html>
+<head>
+    <link rel='stylesheet' href='PreprocessorPanel.css'>
+</head>
+<body>
+<div id="header">
+    <button class="reload-button recording-button">Start Recording</button>
+    <button class="refresh-button recording-button">Refresh page and start recording</button>
+    <button class="remove-logs-button">Remove all event logs</button>
+    <div style="float:right">
+        <button>Simulate Events</button> 
+        <a class="tooltips"><button disabled style="background:#eee">Load</button><span>Not ready yet</span></a>
+        <button class="export-button">Export</button> 
+    </div>
+</div>
+<div id="wrapper">
+    <div id="event_logs">
+        <div id="event_list_top"><h3 class='logTitle'>Logs</h3>
+
+            <div style="float:right"><input id="stick_to_bottom" type="checkbox" checked>Stick to bottom</div>
+            <div style="clear:both"></div>
+        </div>
+        <div id="event_logs_table_area">
+            <div id="headerRow">
+                <div class="event">event</div>
+                <div class="xPath">xPath</div>
+                <div class="timestamp">timestamp</div>
+            </div>
+            <table>
+                <tbody id='logs'>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div id="event_list_area">
+        <h3>Events</h3>
+
+        <div id="event_list">
+
+        </div>
+    </div>
+</div>
+<div id="modal" style="display: none">
+    <div class="content"></div>
+<div class="close-modal"></div>
+</div>
+<script src="PreprocessorPanel.js"></script>
+</body>
+</html>
