@@ -19,10 +19,10 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
 
 chrome.tabs.onRemoved.addListener(function (tabId, changeInfo, tab) {
     console.log('onRemoved', tabId, changeInfo, tab);
-    if (tabId in connections)
+    if (tabId in connections) {
         delete connections[tabId];
+    }
 });
-
 
 chrome.runtime.onConnect.addListener(function (port) {
 
@@ -75,9 +75,9 @@ chrome.runtime.onConnect.addListener(function (port) {
         } else if (message.name == "event_modify") {
             chrome.tabs.query({active: true, currentWindow: true}, function () {
                 if (message.status) {
-                    clients[message.tabId].splice(clients[message.tabId].indexOf(message.event), 1);
-                }else {
                     clients[message.tabId].push(message.event);
+                }else {
+                    clients[message.tabId].splice(clients[message.tabId].indexOf(message.event), 1);
                 }
                 chrome.tabs.sendMessage(message.tabId, {action: "event_modify", event: message.event, status: message.status}, function (response) {
                     console.log("sent events", response);

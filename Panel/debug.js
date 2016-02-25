@@ -1,56 +1,109 @@
 var inject = function () {
-   var trackedEvents = null;
-   /**
-   * Gets an XPath for an element which describes its hierarchical location.
-   * Taken from http://stackoverflow.com/a/11133649
-   */
-  var getElementXPath = function(element) {
-      if (element && element.id)
-          return '//*[@id="' + element.id + '"]';
-      else
-          return getElementTreeXPath(element);
-  };
+    var trackedEvents = null;
+    var getNodeTreeXPath = function (node) {
+        var paths = [];
 
-  var getElementTreeXPath = function(element) {
-      var paths = [];
+        loop1:
+            for (; node && (node.nodeType == 1 || node.nodeType == 3); node = node.parentNode) {
+                var index = 0;
 
-      // Use nodeName (instead of localName) so namespace prefix is included (if any).
-      for (; element && element.nodeType == 1; element = element.parentNode)  {
-          var index = 0;
-          // EXTRA TEST FOR ELEMENT.ID
-          if (element && element.id) {
-              paths.splice(0, 0, '/*[@id="' + element.id + '"]');
-              break;
-          }
+                if (node.id) {
+                    paths.splice(0, 0, '#' + node.id);
+                    break;
+                }
 
-          for (var sibling = element.previousSibling; sibling; sibling = sibling.previousSibling) {
-              // Ignore document type declaration.
-              if (sibling.nodeType == Node.DOCUMENT_TYPE_NODE)
-                continue;
+                var classes = node.classList;
+                if (classes.length > 1) {
+                    var classSelector = "";
+                    for (var i = 0; i < classes.length; i++) {
+                        classSelector += "." + classes[i];
+                    }
+                    if (document.querySelectorAll(classSelector).length === 1) {
+                        paths.splice(0, 0, node.tagName.toLowerCase() + classSelector);
+                        break;
+                    }
+                }
 
-              if (sibling.nodeName == element.nodeName)
-                  ++index;
-          }
+                if (classes.length === 1) {
+                    var classOfElements = document.getElementsByClassName(classes[0]);
 
-          var tagName = element.nodeName.toLowerCase();
-          var pathIndex = (index ? "[" + (index+1) + "]" : "");
-          paths.splice(0, 0, tagName + pathIndex);
-      }
+                    if (classOfElements.length === 1) {
+                        paths.splice(0, 0, node.tagName.toLowerCase() + "." + classes[0]);
+                        break;
+                    } else {
+                        var tempNode = node;
+                        for (; tempNode && (tempNode.nodeType == 1 || tempNode.nodeType == 3); tempNode = tempNode.parentNode) {
+                            if (tempNode.getElementsByClassName(classes[0]).length === 1) {
+                                paths.splice(0, 0, getUniqueSelector(tempNode) + " > " + node.tagName.toLowerCase() + "." + classes[0]);
+                                break loop1;
+                            }
+                        }
+                    }
+                }
 
-      return paths.length ? "/" + paths.join("/") : "WINDOW";
-  };
-    var resolveXPath = function (path) {
-        return new XPathEvaluator().evaluate(path, document.documentElement, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    }
-    console.info("Initialized macro automation tool");
+                for (var sibling = node.previousSibling; sibling; sibling = sibling.previousSibling) {
+                    if (sibling.nodeType == Node.DOCUMENT_TYPE_NODE)
+                        continue;
 
-    var log_event = function (e) {
-        var message = {type: e.type, timeStamp: e.timeStamp, xPath: getElementXPath(e.target)};
-        console.log(e, message);
-        port.postMessage(message);
-    }
+                    if (sibling.nodeName == node.nodeName)
+                        ++index;
+                }
+
+                var tagName = (node.nodeType == 1 ? node.nodeName.toLowerCase() : "");
+                var pathIndex = (index != null ? ":nth-child(" + (index) + ")" : "");
+                paths.splice(0, 0, tagName + pathIndex);
+            }
+
+        return paths.length ? paths.join(" ") : null;
+    };
+
+    var getUniqueSelector = function (node) {
+        if (node && node.id)
+            return '#' + node.id;
+        else
+            return getNodeTreeXPath(node);
+    };
 
     var port = chrome.runtime.connect();
+    console.info("Initialized event listener");
+
+    var dataEvents = ["change", "input", "keydown", "keypress", "keyup"];
+    var keyEvents = ["input", "keydown", "keypress", "keyup"];
+    var log_event = function (e) {
+        var data = {};
+        if (dataEvents.indexOf(e.type) > -1) {
+            if (e.target.tagName === 'SELECT') {
+                data.option = {
+                    value: e.target.options[e.target.selectedIndex].value,
+                    text: e.target.options[e.target.selectedIndex].text
+                };
+            } else if (e.target.tagName === 'INPUT' || e.tagName === 'TEXTAREA') {
+                data.input = {value: e.target.value};
+            }
+        }
+        if (keyEvents.indexOf(e.type) > -1) {
+            data.action = {
+                shiftKey: e.shiftKey,
+                metaKey: e.metaKey,
+                keyCode: e.keyCode,
+                ctrlKey: e.ctrlKey,
+                altKey: e.altKey
+            };
+        }
+
+        if (e.target != null && e.target !== window) {
+            var attributes = {};
+            data.element = {attributes: attributes, tag: e.target.tagName};
+
+            e.target.attributes && Array.prototype.slice.call(e.target.attributes).forEach(function (attr) {
+                attributes[attr.name] = attr.value;
+            });
+        }
+
+        var message = {type: e.type, timestamp: e.timeStamp, data: data, selector: getUniqueSelector(e.target)};
+        console.log('log', message);
+        port.postMessage(message);
+    }
 
     chrome.runtime.onMessage.addListener(
         function (message, sender, sendResponse) {
@@ -60,17 +113,20 @@ var inject = function () {
                 for (var i = 0; i < message.events.length; i++) {
                     window.addEventListener(message.events[i], log_event);
                 }
-            }else
-            if (message.action == "stop") {
+
+                var message = {status: "PAGE_LOAD", timestamp: new Date().getTime(), url:  window.location.href};
+                console.log('log current page', message);
+                port.postMessage(message);
+            } else if (message.action == "stop") {
                 for (var i = 0; i < trackedEvents.length; i++) {
                     window.removeEventListener(trackedEvents[i], log_event);
                 }
-            }else
-            if (message.action == "event_modify") {
-                if(message.status)
+            } else if (message.action == "event_modify") {
+                if (message.status) {
                     window.addEventListener(message.event, log_event);
-                else
+                } else {
                     window.removeEventListener(message.event, log_event);
+                }
 
             }
         });

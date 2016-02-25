@@ -172,8 +172,12 @@ p.index {
   display: inline-block;
 }
 
-#headerRow .xPath, table td.xPath {
-    width: 60%;
+#headerRow .selector, table td.selector {
+    width: 20%;
+}
+
+#headerRow .data, table td.data {
+    width: 40%;
 }
 
 table {
@@ -230,7 +234,7 @@ padding: 5px;
 }
 .fullTextarea {
 width: 100%;
-height: 100%;
+height: calc(100% - 10px);
 font-family: consolas, sans-serif;
 padding: 5px;
 border: none;
@@ -286,4 +290,16 @@ a:hover.tooltips span {
   left: 50%;
   margin-left: -76px;
   z-index: 999;
+}
+#modal .header .item.active {
+    font-weight: bold;
+    text-decoration: underline;
+}
+#modal .header .item {
+    cursor:pointer;
+    width:60px;
+    text-align: center;
+    float:left;
+    padding:4px 6px;
+    border-right:1px solid #eee;
 }

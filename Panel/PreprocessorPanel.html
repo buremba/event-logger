@@ -8,23 +8,30 @@
     <button class="refresh-button recording-button">Refresh page and start recording</button>
     <button class="remove-logs-button">Remove all event logs</button>
     <div style="float:right">
-        <button>Simulate Events</button> 
-        <a class="tooltips"><button disabled style="background:#eee">Load</button><span>Not ready yet</span></a>
-        <button class="export-button">Export</button> 
+        <a class="tooltips">
+            <button disabled style="background:#eee">Simulate Events</button>
+            <span>Not ready yet</span></a>
+        <a class="tooltips">
+            <button disabled style="background:#eee">Load</button>
+            <span>Not ready yet</span></a>
+        <button class="export-button">Export</button>
     </div>
 </div>
 <div id="wrapper">
     <div id="event_logs">
         <div id="event_list_top"><h3 class='logTitle'>Logs</h3>
 
-            <div style="float:right"><input id="stick_to_bottom" type="checkbox" checked>Stick to bottom</div>
+            <div style="float:right;position:relative;top:4px"><input id="stick_to_bottom" type="checkbox" checked>Stick
+                to bottom
+            </div>
             <div style="clear:both"></div>
         </div>
         <div id="event_logs_table_area">
             <div id="headerRow">
                 <div class="event">event</div>
-                <div class="xPath">xPath</div>
+                <div class="selector">selector</div>
                 <div class="timestamp">timestamp</div>
+                <div class="data">data</div>
             </div>
             <table>
                 <tbody id='logs'>
@@ -41,9 +48,16 @@
     </div>
 </div>
 <div id="modal" style="display: none">
+    <div class="header">
+        <div class="json item" type="json">json</div>
+        <div class="protractor item" type="protractor">protractor</div>
+    </div>
+    <div style="clear:both;border-top:1px solid #eee"></div>
     <div class="content"></div>
-<div class="close-modal"></div>
+    <div class="close-modal">
+    </div>
 </div>
+<script src="exporters.js"></script>
 <script src="PreprocessorPanel.js"></script>
 </body>
 </html>
