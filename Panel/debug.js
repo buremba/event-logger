@@ -111,7 +111,7 @@ var inject = function () {
             if (message.action == "track_events") {
                 trackedEvents = message.events;
                 for (var i = 0; i < message.events.length; i++) {
-                    window.addEventListener(message.events[i], log_event);
+                    window.addEventListener(message.events[i], log_event, true);
                 }
 
                 var message = {status: "PAGE_LOAD", timestamp: new Date().getTime(), url:  window.location.href};
